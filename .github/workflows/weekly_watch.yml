@@ -39,3 +39,4 @@ jobs:
           git add state.json
           git commit -m "Update watch state" || echo "No changes to commit"
           git push
+
