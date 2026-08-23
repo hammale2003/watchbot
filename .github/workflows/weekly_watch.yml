@@ -1,0 +1,41 @@
+name: Weekly Watch
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # every Monday at 8:00 UTC
+  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab
+
+permissions:
+  contents: write  # needed to commit the updated state.json
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run watch script
+        env:
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+          LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: python watch.py
+
+      - name: Commit updated state
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add state.json
+          git commit -m "Update watch state" || echo "No changes to commit"
+          git push
